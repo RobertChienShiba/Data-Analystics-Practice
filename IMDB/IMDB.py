@@ -7,10 +7,10 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 
-df_movie=pd.DataFrame()
-def search(search_name):
+
+def search(search_name,headers):
     url="https://www.imdb.com/find"
-    headers={"user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"}
+    #headers={"user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"}
     QSP={"q": search_name,
     "ref_": "nv_sr_sm"}
     
@@ -21,9 +21,9 @@ def search(search_name):
     return movie_url
 
 
-def get_movie_data(search_name):
+def get_movie_data(search_name,headers):
     try:
-        movie_url=search(search_name)
+        movie_url=search(search_name,headers)
         response=requests.get(movie_url,headers=headers)
         response_text=response.text   
         soup=BeautifulSoup(response_text,"lxml")
@@ -51,25 +51,29 @@ def get_movie_data(search_name):
          print("在擷取電影發生錯誤!")
 
 
-
-url="https://www.fantasy-sky.com/ContentList.aspx"
-cookies={"COOKIE_LANGUAGE":"en"}
-headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"}
-movie_name=[]
-for i in range(1,5):
-    QSP={"section": "002", 
-         "category": "0020{}".format(i)}
-    response=requests.get(url,cookies=cookies,headers=headers,params=QSP)
-    data=response.text
-    soup=BeautifulSoup(data,"lxml")
-    movie_name+=[i.text for i in soup.select(".movies-name")]
-for j,i in enumerate(movie_name):
-    if get_movie_data(i)is not None: #and float(get_movie_data(i)["電影評分"])>=8:
-        movie=get_movie_data(i)
-        print("正在擷取{}".format(movie["片名"][0]))
-        df_movie=pd.concat([df_movie,pd.DataFrame(movie)],ignore_index=True)
-df_movie.sort_values(by=["電影評分","上映日期"],ascending=[False,False],inplace=True)
-#print(df_movie.head(30))
-df_movie.to_csv("movie.csv",index=False,encoding="utf_8_sig")
+def main():
+    url="https://www.fantasy-sky.com/ContentList.aspx"
+    cookies={"COOKIE_LANGUAGE":"en"}
+    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"}
+    movie_name=[]
+    df_movie=pd.DataFrame()
+    for i in range(1,5):
+        QSP={"section": "002", 
+             "category": "0020{}".format(i)}
+        response=requests.get(url,cookies=cookies,headers=headers,params=QSP)
+        data=response.text
+        soup=BeautifulSoup(data,"lxml")
+        movie_name+=[i.text for i in soup.select(".movies-name")]
+    for name in movie_name:
+        if get_movie_data(name,headers)is not None: 
+            movie=get_movie_data(name,headers)
+            print(f"正在擷取{movie['片名'][0]}")
+            df_movie=pd.concat([df_movie,pd.DataFrame(movie)],ignore_index=True)
+    df_movie.sort_values(by=["電影評分","上映日期"],ascending=[False,False],inplace=True)
+    #print(df_movie.head(30))
+    df_movie.to_csv("movie.csv",index=False,encoding="utf_8_sig")
+    
+if __name__ == "__main__":
+    main()
 
 
