@@ -69,6 +69,8 @@ time.sleep(1)
 # cookies=driver.get_cookies()
 # print(cookies)
 
+
+##將帳密存成JSON檔作為Cookies 之後可自動登入
 # with open ('facebook.json','w')as f:
 #     f.write(json.dumps(cookies))
     
