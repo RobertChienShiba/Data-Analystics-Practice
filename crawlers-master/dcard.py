@@ -100,8 +100,8 @@ def make_dataframe(com_dict,like_count):
     
     d_bar=defaultdict(int)
     for times in com_dict.values():
-        for times,comm in time.items():
-            d_bar[time]+=len(comm)
+        for times,comm in times.items():
+            d_bar[times]+=len(comm)
             
     #pprint(dict(d_bar))
     d1=list(zip(d_bar.keys(),d_bar.values()))
