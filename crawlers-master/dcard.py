@@ -82,8 +82,6 @@ def crawl_comment(url,comment_count):
                     com_dict[school][time].append(comment)
             qualified_post+=1 
             
-        if page > 15 :
-            break
         t.sleep(1)
                     
     print('擁有完整學校名稱共{}則留言'.format(qualified_post))  
