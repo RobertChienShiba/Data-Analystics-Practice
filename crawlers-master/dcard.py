@@ -80,7 +80,10 @@ def crawl_comment(url,comment_count):
                     com_dict[school][time]=[comment]
                 else:
                     com_dict[school][time].append(comment)
-            qualified_post+=1  
+            qualified_post+=1 
+            
+        if page > 15 :
+            break
         t.sleep(1)
                     
     print('擁有完整學校名稱共{}則留言'.format(qualified_post))  
@@ -123,9 +126,10 @@ def make_dataframe(com_dict,like_count):
 def visualization(df_com,df_time):
     pio.renderers.default = 'browser'
     pie=px.pie(df_com,names='學校',values='留言總數',hover_name='學校',color='學校')
-    pie.update_traces(textposition='inside', textinfo='percent+label',
+    pie.update_traces(textposition='inside', textinfo='percent+label',insidetextfont=dict(size=40),
+                      insidetextorientation="radial",
                             marker=dict(line=dict(color='#000000', width=.4)),
-                            pull=[0, 0, 0.2, 0], opacity=0.7, rotation=180)
+                            pull=[0.2]+[0]*(df_com['學校'].nunique()-1), opacity=0.7, rotation=180)
     pie.update_layout(title={'font':{'family':'Courier New','size':40},'text':'學校留言百分佔比',
                               'x':0.46,'y':.95,'xanchor':'center','yanchor':'top'},
                               uniformtext_minsize=5, uniformtext_mode='hide',
