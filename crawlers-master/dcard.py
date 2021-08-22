@@ -15,6 +15,7 @@ import pandas as pd
 from collections import defaultdict
 import time as t
 import json
+
         
 
 def crawl_post(url):  
@@ -28,7 +29,7 @@ def crawl_post(url):
     d = json.loads(script.string) 
     #pprint(d) 
     
-    post_id=url.split('/')[-1]    
+    post_id=url.split('/')[-1].strip()   
     post_data = d['props']['initialState']['post']['data'][post_id] 
     print('作者:',post_data['authorName']['message'])
     print('建立時間:',post_data['mediaMeta'][0]['createdAt']) 
@@ -36,7 +37,7 @@ def crawl_post(url):
     article="\n".join(article)
     print('文章內容:',article)  
     print('心情數 :',post_data['reactionCount']) 
-    print('文章分類:',post_data['topics'])
+    print('文章關鍵字:',post_data['topics'])
     comment_count =post_data['commentCount']
     return comment_count
     
@@ -81,13 +82,29 @@ def crawl_comment(url,comment_count):
                 else:
                     com_dict[school][time].append(comment)
             qualified_post+=1 
-            
+        if page > 70:
+            break
         t.sleep(1)
                     
     print('擁有完整學校名稱共{}則留言'.format(qualified_post))  
     ##pprint(com_dict) 
     return com_dict , like_count
-                
+
+
+def sorted_time_series(x):
+    if '天' in x:
+        x=int(x.replace('天前',''))
+        return x*24*60
+    elif '小時' in x:
+        x=int(x.replace('小時前',''))
+        return x*60
+    elif '分鐘' in x:
+        x=int(x.replace('分鐘前',''))
+        return x
+    else:
+        return 0
+
+               
 def make_dataframe(com_dict,like_count):
     d=[] 
     for school in com_dict:
@@ -118,19 +135,23 @@ def make_dataframe(com_dict,like_count):
         
     df_time['按讚數']=time_like_total
     
+    df_time['時間排序']=df_time['留言時間'].apply(sorted_time_series)
+    df_time.sort_values(by='時間排序',ascending=False,inplace=True)
+    
     return df_com,df_time
 
 
 def visualization(df_com,df_time):
     pio.renderers.default = 'browser'
     pie=px.pie(df_com,names='學校',values='留言總數',hover_name='學校',color='學校')
-    pie.update_traces(textposition='inside', textinfo='percent+label',insidetextfont=dict(size=40),
+    pie.update_traces(textposition='inside', textinfo='percent+label',insidetextfont=dict(size=df_com['留言總數'].values*10,color='white'),
                       insidetextorientation="radial",
                             marker=dict(line=dict(color='#000000', width=.4)),
-                            pull=[0.2]+[0]*(df_com['學校'].nunique()-1), opacity=0.7, rotation=180)
+                            pull=[0.2 if x == df_com['留言總數'].idxmax() else 0 for x in range(df_com['學校'].nunique())], 
+                            opacity=0.7, rotation=180)
     pie.update_layout(title={'font':{'family':'Courier New','size':40},'text':'學校留言百分佔比',
                               'x':0.46,'y':.95,'xanchor':'center','yanchor':'top'},
-                              uniformtext_minsize=5, uniformtext_mode='hide',
+                              uniformtext_minsize=10, uniformtext_mode='hide',
                               )
     pie.show()   
      
@@ -141,7 +162,8 @@ def visualization(df_com,df_time):
                 template='ggplot2',log_y=True,
                 hover_name='留言時間',
                 color_discrete_sequence= px.colors.sequential.Plasma,
-                labels={'value':'數量','variable':'數量'}
+                labels={'value':'數量','variable':'數量'},
+                category_orders={'留言時間':df_time['留言時間'].values}
                 )
     
     bar.update_layout(title={'font':{'family':'Courier New','size':40},'text':'留言時間長條圖',
@@ -151,7 +173,7 @@ def visualization(df_com,df_time):
     bar.show()
     
 def main():
-    url='https://www.dcard.tw/f/relationship/p/236734422' ##you can change the dcard's url you want to crawl 
+    url='https://www.dcard.tw/f/mood/p/236759860 ' ##you can change the dcard's url you want to crawl 
     comment_count=crawl_post(url)
     com_dict,like_count=crawl_comment(url,comment_count)
     df_com,df_time=make_dataframe(com_dict,like_count)
