@@ -3,7 +3,8 @@ import pprint
 import re
 import random
 import time
-
+import os
+from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import errorcode
 
@@ -76,12 +77,13 @@ def get_proxies(url):
 
 
 def main():
+    load_dotenv()
     db_settings = {
-    "host": "127.0.0.1",
-    "port": 3306,
-    "user": "root",
-    "password": "root123",
-    "charset": "utf8"
+    "host": os.getenv('host'),
+    "port": os.getenv('port'),
+    "user": os.getenv('user'),
+    "password": os.getenv('password'),
+    "charset": os.getenv('charset')
     }
     cursor,cnx=mysql_connection(**db_settings)
     DB_NAME='pchome'

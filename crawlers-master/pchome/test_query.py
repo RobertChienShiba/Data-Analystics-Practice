@@ -1,13 +1,16 @@
 import mysql.connector
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 db_settings = {
-"host": "127.0.0.1",
-"port": 3306,
-"user": "root",
-"password": "root123",
-"charset": "utf8"
+"host": os.getenv('host'),
+"port": os.getenv('port'),
+"user": os.getenv('user'),
+"password": os.getenv('password'),
+"charset": os.getenv('charset')
 }
+print(db_settings)
 cnx = mysql.connector.connect(**db_settings, database='pchome')
 cursor = cnx.cursor(dictionary=True)
 
