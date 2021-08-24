@@ -1,6 +1,6 @@
 facebook.json
 geckodriver.log
-chromedriver.exe
+*.exe
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
